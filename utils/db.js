@@ -34,7 +34,7 @@ class DBClient {
       return await usersCollection.countDocuments();
     } catch (error) {
       console.log(`Error counting users ${error}`);
-      return -1;
+      // return -1;
     }
   }
 
@@ -44,7 +44,7 @@ class DBClient {
       return await filesCollection.countDocuments();
     } catch (error) {
       console.log(`Error counting files ${error}`);
-      return -1;
+      // return -1;
     }
   }
 }
