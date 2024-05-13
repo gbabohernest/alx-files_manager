@@ -29,22 +29,26 @@ class DBClient {
   }
 
   async nbUsers() {
+    // Returns the number of documents in the collection users
     try {
       const usersCollection = this.connection.collection('users');
-      return await usersCollection.countDocuments();
+      const count = await usersCollection.countDocuments();
+      return count;
     } catch (error) {
       console.log(`Error counting users ${error}`);
-      // return -1;
+      return -1;
     }
   }
 
   async nbFiles() {
+    // Returns the number of documents in the collection files
     try {
       const filesCollection = this.connection.collection('files');
-      return await filesCollection.countDocuments();
+      const count = await filesCollection.countDocuments();
+      return count;
     } catch (error) {
       console.log(`Error counting files ${error}`);
-      // return -1;
+      return -1;
     }
   }
 }
