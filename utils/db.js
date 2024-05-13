@@ -25,26 +25,31 @@ class DBClient {
 
   async nbUsers() {
     // Returns the number of documents in the collection users
-    try {
-      const usersCollection = this.client.db.collection('users');
-      const count = await usersCollection.countDocuments();
-      return count;
-    } catch (error) {
-      console.log(`Error counting users ${error}`);
-      return -1;
-    }
+
+    const usersCollection = this.client.db.collection('users');
+    return usersCollection.countDocuments();
+    // try {
+    //   const usersCollection = this.client.db.collection('users');
+    //   const count = await usersCollection.countDocuments();
+    //   return count;
+    // } catch (error) {
+    //   console.log(`Error counting users ${error}`);
+    //   return -1;
+    // }
   }
 
   async nbFiles() {
     // Returns the number of documents in the collection files
-    try {
-      const filesCollection = this.client.db.collection('files');
-      const count = await filesCollection.countDocuments();
-      return count;
-    } catch (error) {
-      console.log(`Error counting files ${error}`);
-      return -1;
-    }
+    const filesCollection = this.client.db.collection('files');
+    return filesCollection.countDocuments();
+    // try {
+    //   const filesCollection = this.client.db.collection('files');
+    //   const count = await filesCollection.countDocuments();
+    //   return count;
+    // } catch (error) {
+    //   console.log(`Error counting files ${error}`);
+    //   return -1;
+    // }
   }
 }
 
