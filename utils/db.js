@@ -10,6 +10,7 @@ class DBClient {
 
     this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
     this.connection = null;
+    this.connected = false;
 
     this.connect();
   }
@@ -18,19 +19,23 @@ class DBClient {
     try {
       await this.client.connect();
       this.connection = this.client.db();
+      this.connected = true;
       console.log('Connected to MongoDB');
     } catch (error) {
       console.log(`Error connecting to MongoDB: ${error}`);
+      this.connected = false;
     }
   }
 
   async isAlive() {
-    return this.client.isConnected() && !!this.connection;
-    // return !!this.connection();
+    return this.connected;
   }
 
   async nbUsers() {
     try {
+      if (!this.connected) {
+        await this.connect();
+      }
       const usersCollection = this.connection.collection('users');
       return await usersCollection.countDocuments();
     } catch (error) {
@@ -41,6 +46,9 @@ class DBClient {
 
   async nbFiles() {
     try {
+      if (!this.connected) {
+        await this.connect();
+      }
       const filesCollection = this.connection.collection('files');
       return await filesCollection.countDocuments();
     } catch (error) {
