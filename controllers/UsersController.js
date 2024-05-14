@@ -1,4 +1,3 @@
-// import { ObjectId }  from 'mongodb';
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
 
