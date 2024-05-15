@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-import { ObjectId } from 'mongodb';
+// import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
@@ -93,9 +93,15 @@ const FilesController = {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { userId } = req;
+    if (!id) {
+      return res.status(404).json({ error: 'Not found' });
+    }
 
-    const file = await dbClient.connection.collection('files').findOne({ _id: ObjectId(id), userId });
+    // const { userId } = req;
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+
+    const file = await dbClient.connection.collection('files').findOne({ _id: id, userId });
 
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
@@ -116,13 +122,16 @@ const FilesController = {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { userId } = req;
+    // const { userId } = req;
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
 
     const pageSize = 20;
-    const skip = page * pageSize;
+    // eslint-disable-next-line radix
+    const skip = parseInt(page) * pageSize;
 
     const files = await dbClient.connection.collection('files').aggregate([
-      { $match: { parentId: parentId.toString(), userId } },
+      { $match: { parentId, userId } },
       { $skip: skip },
       { $limit: pageSize },
     ]).toArray();
