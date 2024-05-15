@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 // import { ObjectId } from 'mongodb';
+import mimeTypes from 'mime-types';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
@@ -200,6 +201,47 @@ const FilesController = {
     return res.status(200).json(updatedFile);
   },
 
+  /**
+   * Return the content of the file document based on the ID
+   */
+  async getFile(req, res) {
+    const { id } = req.params;
+    const { userId } = req;
+
+    if (!id) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const file = await dbClient.connection.collection('files').findOne({ _id: id });
+
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (!file.isPublic && (!userId || file.userId !== userId)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (file.type === 'folder') {
+      return res.status(400).json({ error: "A folder doesn't have content" });
+    }
+
+    if (!fs.existsSync(file.localPath)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const mimeType = mimeTypes.lookup(file.name);
+
+    if (!mimeType) {
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    res.setHeader('Content-Type', mimeType);
+
+    const fileContent = fs.readFileSync(file.localPath);
+
+    return res.send(fileContent);
+  },
 };
 
 module.exports = FilesController;
