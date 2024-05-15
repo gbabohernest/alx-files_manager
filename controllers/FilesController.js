@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
@@ -79,6 +80,54 @@ const FilesController = {
       console.log(`Error, Cannot create file: ${error}`);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
+  },
+
+  /**
+   * Retrieve the file document based on the ID
+   */
+  async getShow(req, res) {
+    const { 'x-token': token } = req.headers;
+    const { id } = req.params;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { userId } = req;
+
+    const file = await dbClient.connection.collection('files').findOne({ _id: ObjectId(id), userId });
+
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    return res.status(200).json(file);
+  },
+
+  /**
+   * Retrieve all users file documents for a specific parentId
+   * and with pagination.
+   */
+  async getIndex(req, res) {
+    const { 'x-token': token } = req.headers;
+    const { parentId = 0, page = 0 } = req.query;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { userId } = req;
+
+    const pageSize = 20;
+    const skip = page * pageSize;
+
+    const files = await dbClient.connection.collection('files').aggregate([
+      { $match: { parentId: parentId.toString(), userId } },
+      { $skip: skip },
+      { $limit: pageSize },
+    ]).toArray();
+
+    return res.status(200).json(files);
   },
 };
 
