@@ -4,6 +4,7 @@ import fs from 'fs';
 import mimeTypes from 'mime-types';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+import fileQueue from '../worker';
 
 const FilesController = {
   /**
@@ -71,6 +72,9 @@ const FilesController = {
       fs.writeFileSync(localPath, Buffer.from(data, 'base64'));
 
       newFile.localPath = localPath;
+
+      // Add job to queue for generating thumbnails
+      await fileQueue.add({ fileId, userId });
     }
 
     try {
@@ -207,6 +211,7 @@ const FilesController = {
   async getFile(req, res) {
     const { id } = req.params;
     const { userId } = req;
+    const { size } = req.query;
 
     if (!id) {
       return res.status(404).json({ error: 'Not found' });
@@ -226,11 +231,22 @@ const FilesController = {
       return res.status(400).json({ error: "A folder doesn't have content" });
     }
 
+    // BASE ON THE SIZE RETURN THE CORRECT LOCAL FILE
+    // NEW UPDATE
+    const fileName = `${file.name}_${size}`;
+    const filePath = `${file.localPath}_${size}`;
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    /*
     if (!fs.existsSync(file.localPath)) {
       return res.status(404).json({ error: 'Not found' });
     }
+     */
 
-    const mimeType = mimeTypes.lookup(file.name);
+    // const mimeType = mimeTypes.lookup(file.name);
+    const mimeType = mimeTypes.lookup(fileName);
 
     if (!mimeType) {
       return res.status(500).json({ error: 'Internal Server Error' });
@@ -238,7 +254,8 @@ const FilesController = {
 
     res.setHeader('Content-Type', mimeType);
 
-    const fileContent = fs.readFileSync(file.localPath);
+    // const fileContent = fs.readFileSync(file.localPath);
+    const fileContent = fs.readFileSync(filePath);
 
     return res.send(fileContent);
   },
