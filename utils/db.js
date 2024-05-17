@@ -10,8 +10,8 @@ class DBClient {
 
     this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
     this.connection = null;
-    this.connected = false;
-
+    // this.connected = false;
+    this.connected = '';
     this.connect();
   }
 
@@ -19,17 +19,18 @@ class DBClient {
     try {
       await this.client.connect();
       this.connection = this.client.db();
-      this.connected = true;
+      this.connected = this.connection.isConnected();
+      // this.connected = true;
       console.log('Connected to MongoDB');
     } catch (error) {
+      this.connected = this.connection.isConnected();
       console.log(`Error connecting to MongoDB: ${error}`);
-      this.connected = false;
+      // this.connected = false;
     }
   }
 
   async isAlive() {
-    // return this.connected;
-    return !!this.connection;
+    return this.connected;
   }
 
   async nbUsers() {
